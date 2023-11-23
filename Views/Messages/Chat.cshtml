@@ -1,0 +1,71 @@
+﻿@model List<MyChat.Models.Message>
+
+@{   
+    ViewData["Title"] = "Chat";
+}
+
+<div class="chat-container">
+            <div class="chat-messages">
+            </div>
+            <div class="send-message">
+                <div class="input-group">
+                    <textarea class="form-control fixed-size-textarea" id="text" rows="3" cols="50" placeholder="Введите сообщение"></textarea>
+                    <button class="btn btn-primary" id="send">Отправить</button>
+                </div>
+            </div>
+        </div>
+
+@section Scripts {
+    <script>
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
+            return date.toLocaleDateString(undefined, options);
+        }
+
+        function getMessage() {
+            $('.chat-messages').html("");
+            $.get('@Url.Action("GetMessage", "Messages")', function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    const formattedDate = formatDateTime(data[i].departureDate);
+                    if ('@User.Identity.Name' != data[i].user.userName) {
+                        $('.chat-messages').append($('<div class="message"><div class="avatar"><img src="' + data[i].user.avatar +
+                            '" alt="Аватар"></div><div class="message-content"><div class="message-date">' + formattedDate +
+                            '</div><div class="message-sender">' + data[i].user.userName +
+                            '</div><div class="message-text">' + data[i].messageText + '</div></div></div>'));
+                    } else {
+                        $('.chat-messages').append($('<div class="message my-message"><div class="avatar"><img src="' + data[i].user.avatar +
+                            '" alt="Аватар"></div><div class="message-content"><div class="message-date">' + formattedDate +
+                            '</div><div class="message-sender">' + data[i].user.userName +
+                            '</div><div class="message-text">' + data[i].messageText + '</div></div></div>'));
+                    }
+                }
+            });
+        }
+        setInterval(getMessage, 5000);
+        $('#send').click(function() {
+            $('#text').on('input', function() {
+                if(this.value.length > 150) {
+                    this.value = this.value.substring(0, 150);
+                }
+            });
+            $.ajax({
+                url: '@Url.Action("AddMessage", "Messages")',
+                type: 'POST',
+                data: {
+                    'userName': '@User.Identity.Name',
+                    'text': $('#text').val()
+                },
+                success: $('#text').val('')
+            });
+        });
+
+        $(document).on('click', '.message-sender', function() {
+            const userName = $(this).text();
+            window.location.href = '/Users/Details?name=' + userName;
+        });
+
+        
+    </script>
+}
+
