@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using MyChat.Models;
 using MyChat.Services;
 
@@ -12,6 +13,7 @@ namespace MyChat
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Services.AddScoped<EmailService>();
             builder.Services.AddControllersWithViews();
 
             string connection = builder.Configuration.GetConnectionString("DefaultConnection");

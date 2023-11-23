@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MyChat.Models;
+using MyChat.Services;
 using MyChat.ViewModels;
 
 namespace MyChat.Controllers
@@ -9,10 +10,12 @@ namespace MyChat.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
-        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager)
+        private readonly EmailService _emailService;
+        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, EmailService emailService)
         {
             _signInManager = signInManager;
             _userManager = userManager;
+            _emailService = emailService;
         }
         [HttpGet]
         public IActionResult Register()
@@ -53,6 +56,12 @@ namespace MyChat.Controllers
                 {
                     await _userManager.AddToRoleAsync(user, "user");
                     await _signInManager.SignInAsync(user, false);
+                    string message = $"Здравствуйте {user.UserName},\n\n" +
+                            "Добро пожаловать в наше сообщество! Мы очень рады видеть вас здесь. Ваш аккаунт успешно создан.\n\n" +
+                            $"Ваш логин: {user.UserName}\n\n" +
+                            "Чтобы управлять своим профилем и участвовать в наших обсуждениях, вы можете посетить ваш профиль по следующей ссылке:\n" +
+                            $"https://localhost:7102/Users/Details/{user.Id}\n\n";
+                    await _emailService.SendEmailAsync(user.Email, "Добро пожаловать в наше сообщество!", message);
                     return RedirectToAction("Chat", "Messages");
                 }
                 foreach (var error in result.Errors)
